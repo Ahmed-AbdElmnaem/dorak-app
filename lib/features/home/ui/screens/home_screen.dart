@@ -1,7 +1,7 @@
 import 'package:dorak_app/core/routing/routes.dart';
 import 'package:dorak_app/core/theming/color_manager.dart';
 import 'package:dorak_app/features/group_details/data/group_details_args.dart';
-import 'package:dorak_app/features/home/data/model/group_Model.dart';
+import 'package:dorak_app/features/home/data/model/group_model.dart';
 import 'package:dorak_app/features/home/ui/widget/custom_bottom_sheet.dart';
 import 'package:dorak_app/features/home/ui/widget/group_item_widget.dart';
 import 'package:flutter/material.dart';

@@ -1,4 +1,4 @@
-import 'package:dorak_app/features/home/data/model/group_Model.dart';
+import 'package:dorak_app/features/home/data/model/group_model.dart';
 
 class GroupDetailsArgs {
   final GroupModel group;

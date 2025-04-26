@@ -3,7 +3,7 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:dorak_app/core/theming/color_manager.dart';
 import 'package:dorak_app/core/theming/styles.dart';
-import 'package:dorak_app/features/home/data/model/group_Model.dart';
+import 'package:dorak_app/features/home/data/model/group_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 

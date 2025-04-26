@@ -1,5 +1,3 @@
-// lib/features/home/data/model/group_model.dart
-
 class GroupModel {
   final String name;
   final int membersCount;
