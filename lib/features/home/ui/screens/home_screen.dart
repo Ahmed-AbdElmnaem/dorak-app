@@ -1,6 +1,6 @@
-import 'package:dorak_app/core/helpers/extension.dart';
 import 'package:dorak_app/core/routing/routes.dart';
 import 'package:dorak_app/core/theming/color_manager.dart';
+import 'package:dorak_app/features/group_details/data/group_details_args.dart';
 import 'package:dorak_app/features/home/data/model/group_Model.dart';
 import 'package:dorak_app/features/home/ui/widget/custom_bottom_sheet.dart';
 import 'package:dorak_app/features/home/ui/widget/group_item_widget.dart';
@@ -25,7 +25,9 @@ class _HomeScreenState extends State<HomeScreen> {
   // Function to show the custom bottom sheet
   void showCustomBottomSheet(BuildContext context) {
     showModalBottomSheet(
-      isScrollControlled: false,
+      isScrollControlled: true,
+      showDragHandle: true,
+
       context: context,
       builder: (context) {
         return CustomBottomSheet(
@@ -46,13 +48,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Function to handle navigation to GroupDetailsScreen
   void navigateToGroupDetails(GroupModel group) {
-    context.pushNamed(Routes.groupDetails, arguments: group);
+    List<DateTime> paymentDates = [];
+    Navigator.pushNamed(
+      context,
+      Routes.groupDetails,
+      arguments: GroupDetailsArgs(group: group, paymentDates: paymentDates),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: true,
+      resizeToAvoidBottomInset: false,
       floatingActionButton: FloatingActionButton(
         tooltip: 'Add new group',
         backgroundColor: ColorManager.mainColor,

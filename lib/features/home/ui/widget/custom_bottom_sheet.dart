@@ -1,3 +1,4 @@
+import 'package:dorak_app/core/helpers/extension.dart';
 import 'package:dorak_app/core/routing/routes.dart';
 import 'package:dorak_app/core/theming/color_manager.dart';
 import 'package:dorak_app/core/theming/styles.dart';
@@ -33,59 +34,66 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
   DateTime? startDate;
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
+  disose() {
+    widget.nameController.dispose();
+    widget.membersController.dispose();
+    widget.dailyAmountController.dispose();
+    widget.cycleDaysController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(),
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: SingleChildScrollView(
         child: Form(
           key: formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                Text(
-                  "إضافة تفاصيل",
-                  style: Styles.font17W700,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                _buildTextFormField(
-                  controller: widget.nameController,
-                  hintText: "اسم المجموعة",
-                  keyboardType: TextInputType.name,
-                ),
-                const SizedBox(height: 10),
-                _buildTextFormField(
-                  controller: widget.membersController,
-                  hintText: "عدد الأشخاص",
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 10),
-                _buildTextFormField(
-                  controller: widget.dailyAmountController,
-                  hintText: "المبلغ اليومي",
-                  keyboardType: TextInputType.numberWithOptions(decimal: true),
-                ),
-                const SizedBox(height: 10),
-                _buildTextFormField(
-                  controller: widget.cycleDaysController,
-                  hintText: "فترة كل دورة (بالأيام)",
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 10),
-                _buildDatePicker(context),
-                const SizedBox(height: 16),
-                widget.isLoading
-                    ? const CircularProgressIndicator()
-                    : ElevatedButton(
-                      onPressed: () => _onAddPressed(context),
-                      child: Text("إضافة"),
-                    ),
-                const SizedBox(height: 16),
-              ],
-            ),
+          child: Column(
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              Text(
+                "إضافة تفاصيل",
+                style: Styles.font17W700,
+                textAlign: TextAlign.center,
+              ),
+              16.0.h,
+              _buildTextFormField(
+                controller: widget.nameController,
+                hintText: "اسم المجموعة",
+                keyboardType: TextInputType.name,
+              ),
+              const SizedBox(height: 10),
+              _buildTextFormField(
+                controller: widget.membersController,
+                hintText: "عدد الأشخاص",
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 10),
+              _buildTextFormField(
+                controller: widget.dailyAmountController,
+                hintText: "المبلغ اليومي",
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 10),
+              _buildTextFormField(
+                controller: widget.cycleDaysController,
+                hintText: "فترة كل دورة (بالأيام)",
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 10),
+              _buildDatePicker(context),
+              const SizedBox(height: 16),
+              widget.isLoading
+                  ? const CircularProgressIndicator()
+                  : ElevatedButton(
+                    onPressed: () => _onAddPressed(context),
+                    child: Text("إضافة"),
+                  ),
+              const SizedBox(height: 16),
+            ],
           ),
         ),
       ),
@@ -101,7 +109,6 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
       controller: controller,
       hintText: hintText,
       keyboardType: keyboardType,
-      textInputAction: TextInputAction.next,
       validator: (v) => v?.isEmpty ?? true ? "هذا الحقل مطلوب" : null,
     );
   }
@@ -188,12 +195,15 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
       endDate: startDate!.add(Duration(days: cycleDays * membersCount)),
     );
 
-    // إرسال البيانات إلى الصفحة التالية
     widget.onGroupAdded(group);
     Navigator.pushNamed(
       context,
       Routes.groupDetails,
       arguments: GroupDetailsArgs(group: group, paymentDates: paymentDates),
     );
+    widget.nameController.clear();
+    widget.membersController.clear();
+    widget.dailyAmountController.clear();
+    widget.cycleDaysController.clear();
   }
 }

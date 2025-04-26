@@ -1,27 +1,33 @@
 plugins {
     id("com.android.application")
+    // START: FlutterFire Configuration
+    id("com.google.gms.google-services")
+    // END: FlutterFire Configuration
     id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
 android {
     namespace = "com.example.testapp"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = "23.1.7779620" // تحديد إصدار NDK المناسب
+    ndkVersion = flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
-    }
+    jvmTarget = "17"
+    freeCompilerArgs = freeCompilerArgs + listOf(
+        "-Xjvm-default=all",
+        "-Xskip-metadata-version-check"
+    )
+}
 
     defaultConfig {
         applicationId = "com.example.testapp"
-        minSdk = flutter.minSdkVersion
+        minSdkVersion(23)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -32,6 +38,11 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+}
+dependencies {
+    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))  // إصدار Firebase BOM
+    implementation("com.google.firebase:firebase-analytics-ktx")  // مثال على حزمة Firebase
+    implementation("com.google.firebase:firebase-auth-ktx")  // إضافة المزيد حسب الحاجة
 }
 
 flutter {

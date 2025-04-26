@@ -1,7 +1,10 @@
 import 'package:animate_do/animate_do.dart';
+import 'package:dorak_app/core/helpers/extension.dart';
+import 'package:dorak_app/core/theming/color_manager.dart';
 import 'package:dorak_app/features/home/data/model/group_Model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:local_auth/local_auth.dart';
 
 class GroupDetailsScreen extends StatefulWidget {
   final List<DateTime> paymentDates;
@@ -45,7 +48,69 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
     return 'الدور $number';
   }
 
-  @override
+  void _handleSave() async {
+    final LocalAuthentication auth = LocalAuthentication();
+
+    try {
+      bool didAuthenticate = await auth.authenticate(
+        localizedReason: 'من فضلك قم بتأكيد البصمة لحفظ بيانات الجمعية',
+        options: const AuthenticationOptions(biometricOnly: true),
+      );
+
+      if (!didAuthenticate) {
+        // لو البصمة فشلت أو المستخدم لغى
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('فشل التحقق بالبصمة. لم يتم حفظ البيانات.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return; // نوقف الحفظ
+      }
+    } catch (e) {
+      print('Biometric auth error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('حدث خطأ أثناء التحقق بالبصمة.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // ✨ لو البصمة نجحت، نكمل عملية الحفظ ✨
+    for (int i = 0; i < nameControllers.length; i++) {
+      if (nameControllers[i].text.trim().isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('من فضلك أدخل اسم لكل عضو قبل الحفظ'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+    }
+
+    List<Map<String, dynamic>> membersData = List.generate(
+      widget.group.membersCount,
+      (index) {
+        return {
+          'name': nameControllers[index].text.trim(),
+          'payments': payments[index],
+        };
+      },
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('تم حفظ البيانات بنجاح'),
+        backgroundColor: Colors.green,
+      ),
+    );
+
+    // هنا كمل إرسال البيانات للسيرفر أو تخزينها حسب احتياجك
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -117,6 +182,25 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                 ),
               ),
             ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _handleSave,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: ColorManager.mainColor,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'حفظ البيانات',
+                style: TextStyle(fontSize: 16, color: Colors.white),
+              ),
+            ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -124,7 +208,13 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
   }
 
   Widget _buildGroupInfo() {
-    final totalAmount = widget.group.dailyAmount * widget.group.membersCount;
+    final totalDailyAmount =
+        widget.group.dailyAmount *
+        widget.group.membersCount; // إجمالي المبلغ اليومي لجميع الأعضاء
+    final totalCycleAmount =
+        widget.group.dailyAmount *
+        widget.group.membersCount *
+        widget.group.cycleDays; // إجمالي مبلغ كل دور لجميع الأعضاء
 
     return FadeInDown(
       duration: const Duration(milliseconds: 600),
@@ -140,7 +230,6 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Row with multiple information displayed side by side
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -174,13 +263,19 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                   ],
                 ),
                 const Divider(height: 20),
-                // Row for the total amount at the bottom
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     _buildInfoColumn(
-                      "إجمالي المبلغ",
-                      "${totalAmount.toStringAsFixed(2)} جنيه",
+                      "إجمالي المبلغ اليومي",
+                      "${totalDailyAmount.toStringAsFixed(2)} جنيه", // إجمالي المبلغ اليومي لجميع الأعضاء
+                      isTotal: true,
+                    ),
+                    30.w,
+                    _buildInfoColumn(
+                      "إجمالي مبلغ كل دور",
+                      "${totalCycleAmount.toStringAsFixed(2)} جنيه", // إجمالي المبلغ لكل دور لجميع الأعضاء
                       isTotal: true,
                     ),
                   ],

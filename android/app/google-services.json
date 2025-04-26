@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1089688238370",
+    "project_id": "dorak-app-27186",
+    "storage_bucket": "dorak-app-27186.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1089688238370:android:11dcdb6856684f7b58cd7b",
+        "android_client_info": {
+          "package_name": "com.example.testapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBM0QLOOhSMRRQTyoPPHWDs7j4pKVYzDqA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

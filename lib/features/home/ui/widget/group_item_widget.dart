@@ -29,7 +29,7 @@ class GroupItemWidget extends StatelessWidget {
           padding: const EdgeInsets.all(20.0),
           margin: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
           decoration: BoxDecoration(
-            color: ColorManager.mainColor, // استبدل بـ ColorManager.mainColor
+            color: ColorManager.mainColor,
             borderRadius: BorderRadius.circular(12.0),
             boxShadow: [
               BoxShadow(
