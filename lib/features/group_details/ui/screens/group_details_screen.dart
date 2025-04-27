@@ -68,8 +68,6 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
         backgroundColor: Colors.green,
       ),
     );
-
-    // هنا ممكن تبعت الداتا للسيرفر
   }
 
   @override

@@ -34,11 +34,12 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
   DateTime? startDate;
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
-  disose() {
-    widget.nameController.dispose();
-    widget.membersController.dispose();
-    widget.dailyAmountController.dispose();
-    widget.cycleDaysController.dispose();
+  @override
+  void dispose() {
+    widget.nameController.clear();
+    widget.membersController.clear();
+    widget.dailyAmountController.clear();
+    widget.cycleDaysController.clear();
     super.dispose();
   }
 
@@ -52,7 +53,7 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
         child: Form(
           key: formKey,
           child: Column(
-            mainAxisSize: MainAxisSize.max,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 "إضافة تفاصيل",
@@ -86,12 +87,7 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
               const SizedBox(height: 10),
               _buildDatePicker(context),
               const SizedBox(height: 16),
-              widget.isLoading
-                  ? const CircularProgressIndicator()
-                  : ElevatedButton(
-                    onPressed: () => _onAddPressed(context),
-                    child: Text("إضافة"),
-                  ),
+              _buildSubmitButton(context),
               const SizedBox(height: 16),
             ],
           ),
@@ -114,35 +110,45 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
   }
 
   Widget _buildDatePicker(BuildContext context) {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: Column(
-            children: [
-              TextButton(
-                style: TextButton.styleFrom(
-                  backgroundColor: ColorManager.mainColor,
-                ),
-                onPressed: () async {
-                  final picked = await _showDatePicker(context);
-                  if (picked != null) {
-                    setState(() => startDate = picked);
-                  }
-                },
-                child: Text("اختر تاريخ البداية", style: Styles.font15W500),
-              ),
-              Text(
-                DateFormat('yyyy-MM-dd').format(startDate ?? DateTime.now()),
-              ),
-            ],
+        TextButton(
+          style: TextButton.styleFrom(
+            backgroundColor: ColorManager.mainColor,
+            minimumSize: const Size(double.infinity, 48),
           ),
+          onPressed: _selectStartDate,
+          child: Text(
+            "اختر تاريخ البداية",
+            style: Styles.font15W500.copyWith(color: Colors.white),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          startDate != null
+              ? DateFormat('yyyy-MM-dd').format(startDate!)
+              : "لم يتم اختيار تاريخ",
+          style: Styles.font14W400,
         ),
       ],
     );
   }
 
-  Future<DateTime?> _showDatePicker(BuildContext context) {
-    return showDatePicker(
+  Widget _buildSubmitButton(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child:
+          widget.isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : ElevatedButton(
+                onPressed: () => _validateAndSubmit(context),
+                child: const Text("إضافة"),
+              ),
+    );
+  }
+
+  Future<void> _selectStartDate() async {
+    final picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime(2000),
@@ -156,54 +162,89 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
               surface: Colors.white,
               onSurface: Colors.black,
             ),
-            dialogTheme: DialogThemeData(backgroundColor: Colors.white),
+            dialogTheme: const DialogTheme(backgroundColor: Colors.white),
           ),
           child: child!,
         );
       },
     );
+
+    if (picked != null) {
+      setState(() => startDate = picked);
+    }
   }
 
-  void _onAddPressed(BuildContext context) {
-    if (formKey.currentState?.validate() != true || startDate == null) {
+  void _validateAndSubmit(BuildContext context) {
+    if (!_validateForm()) return;
+
+    final group = _createGroupModel();
+    widget.onGroupAdded(group);
+
+    _navigateToGroupDetails(context, group);
+    _clearForm();
+  }
+
+  bool _validateForm() {
+    if (formKey.currentState?.validate() != true) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("يرجى ملء جميع الحقول")));
+      return false;
+    }
+
+    if (startDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("يرجى اختيار تاريخ البداية")),
       );
-      return;
+      return false;
     }
 
+    return true;
+  }
+
+  GroupModel _createGroupModel() {
     final membersCount = int.tryParse(widget.membersController.text) ?? 0;
     final cycleDays = int.tryParse(widget.cycleDaysController.text) ?? 0;
+    final dailyAmount =
+        double.tryParse(widget.dailyAmountController.text) ?? 0.0;
 
-    // حساب تواريخ الدورات
-    List<DateTime> paymentDates = [];
-    DateTime currentDate = startDate!;
-    for (int i = 0; i < membersCount; i++) {
-      paymentDates.add(currentDate);
-      currentDate = currentDate.add(
-        Duration(days: cycleDays),
-      ); // إضافة أيام للدورة التالية
-    }
-
-    // إنشاء المجموعة
-    final group = GroupModel(
+    return GroupModel(
       name: widget.nameController.text,
       membersCount: membersCount,
-      dailyAmount: double.parse(widget.dailyAmountController.text),
+      dailyAmount: dailyAmount,
       cycleDays: cycleDays,
-      startDate: startDate ?? DateTime.now(),
+      startDate: startDate!,
       endDate: startDate!.add(Duration(days: cycleDays * membersCount)),
     );
+  }
 
-    widget.onGroupAdded(group);
+  void _navigateToGroupDetails(BuildContext context, GroupModel group) {
+    final paymentDates = _calculatePaymentDates(group);
+
     Navigator.pushNamed(
       context,
       Routes.groupDetails,
       arguments: GroupDetailsArgs(group: group, paymentDates: paymentDates),
     );
+  }
+
+  List<DateTime> _calculatePaymentDates(GroupModel group) {
+    List<DateTime> dates = [];
+    DateTime currentDate = group.startDate;
+
+    for (int i = 0; i < group.membersCount; i++) {
+      dates.add(currentDate);
+      currentDate = currentDate.add(Duration(days: group.cycleDays));
+    }
+
+    return dates;
+  }
+
+  void _clearForm() {
     widget.nameController.clear();
     widget.membersController.clear();
     widget.dailyAmountController.clear();
     widget.cycleDaysController.clear();
+    setState(() => startDate = null);
   }
 }
