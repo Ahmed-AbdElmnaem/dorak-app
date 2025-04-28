@@ -112,15 +112,18 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
   Widget _buildDatePicker(BuildContext context) {
     return Column(
       children: [
-        TextButton(
-          style: TextButton.styleFrom(
-            backgroundColor: ColorManager.mainColor,
-            minimumSize: const Size(double.infinity, 48),
-          ),
-          onPressed: _selectStartDate,
-          child: Text(
-            "اختر تاريخ البداية",
-            style: Styles.font15W500.copyWith(color: Colors.white),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          child: TextButton(
+            style: TextButton.styleFrom(
+              backgroundColor: ColorManager.mainColor,
+              minimumSize: const Size(double.infinity, 48),
+            ),
+            onPressed: _selectStartDate,
+            child: Text(
+              "اختر تاريخ البداية",
+              style: Styles.font15W500.copyWith(color: Colors.white),
+            ),
           ),
         ),
         const SizedBox(height: 8),
@@ -140,9 +143,12 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
       child:
           widget.isLoading
               ? const Center(child: CircularProgressIndicator())
-              : ElevatedButton(
-                onPressed: () => _validateAndSubmit(context),
-                child: const Text("إضافة"),
+              : Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: ElevatedButton(
+                  onPressed: () => _validateAndSubmit(context),
+                  child: const Text("إضافة"),
+                ),
               ),
     );
   }
@@ -219,25 +225,13 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
   }
 
   void _navigateToGroupDetails(BuildContext context, GroupModel group) {
-    final paymentDates = _calculatePaymentDates(group);
+    final paymentDates = (group.calculatePaymentDates());
 
     Navigator.pushNamed(
       context,
       Routes.groupDetails,
       arguments: GroupDetailsArgs(group: group, paymentDates: paymentDates),
     );
-  }
-
-  List<DateTime> _calculatePaymentDates(GroupModel group) {
-    List<DateTime> dates = [];
-    DateTime currentDate = group.startDate;
-
-    for (int i = 0; i < group.membersCount; i++) {
-      dates.add(currentDate);
-      currentDate = currentDate.add(Duration(days: group.cycleDays));
-    }
-
-    return dates;
   }
 
   void _clearForm() {

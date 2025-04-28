@@ -88,7 +88,13 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                 });
               },
             ),
-            SaveButton(onPressed: _handleSave),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: 8.0,
+                horizontal: 20.0,
+              ),
+              child: SaveButton(onPressed: _handleSave),
+            ),
           ],
         ),
       ),
