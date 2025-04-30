@@ -1,9 +1,14 @@
+import 'package:dorak_app/features/group_details/logic/cubit/group_details_cubit.dart';
+import 'package:dorak_app/features/group_details/ui/widget/member_row.dart';
+import 'package:dorak_app/features/home/data/model/group_model.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'member_row.dart';
-
-class PaymentsDataTable extends StatelessWidget {
+class PaymentsDataTable extends StatefulWidget {
+  final List<MemberModel> members; // ✅
+  final GroupModel group;
   final List<DateTime> paymentDates;
   final List<List<bool>> payments;
   final List<TextEditingController> nameControllers;
@@ -16,8 +21,15 @@ class PaymentsDataTable extends StatelessWidget {
     required this.payments,
     required this.nameControllers,
     required this.onPaymentChanged,
+    required this.group,
+    required this.members, // ✅
   });
 
+  @override
+  _PaymentsDataTableState createState() => _PaymentsDataTableState();
+}
+
+class _PaymentsDataTableState extends State<PaymentsDataTable> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -31,11 +43,11 @@ class PaymentsDataTable extends StatelessWidget {
         columns: [
           const DataColumn(label: Text('#')),
           const DataColumn(label: Text('الاسم')),
-          ...paymentDates.map(
+          ...widget.paymentDates.map(
             (date) => DataColumn(
               label: Column(
                 children: [
-                  Text('الدور ${paymentDates.indexOf(date) + 1}'),
+                  Text('الدور ${widget.paymentDates.indexOf(date) + 1}'),
                   Text(
                     DateFormat('dd/MM').format(date),
                     style: const TextStyle(fontSize: 12),
@@ -46,14 +58,23 @@ class PaymentsDataTable extends StatelessWidget {
           ),
         ],
         rows: List.generate(
-          nameControllers.length,
+          widget.nameControllers.length,
           (index) => MemberRow.build(
             index: index,
-            nameController: nameControllers[index],
-            payments: payments[index],
-            onPaymentChanged:
-                (paymentIndex, value) =>
-                    onPaymentChanged(index, paymentIndex, value),
+            nameController: widget.nameControllers[index],
+            payments: widget.payments[index],
+            onPaymentChanged: (paymentIndex, value) {
+              widget.onPaymentChanged(index, paymentIndex, value);
+
+              BlocProvider.of<GroupDetailsCubit>(context).updatePaymentStatus(
+                userId: FirebaseAuth.instance.currentUser?.uid ?? '',
+                groupId: widget.group.id.toString(),
+                memberId: widget.members[index].id.toString(), // ✅ صح كده
+                paymentIndex:
+                    widget.paymentDates[paymentIndex].toIso8601String(),
+                value: value,
+              );
+            },
           ),
         ),
       ),

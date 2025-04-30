@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:dorak_app/core/helpers/extension.dart';
 import 'package:dorak_app/core/routing/routes.dart';
 import 'package:dorak_app/core/theming/color_manager.dart';
@@ -5,7 +7,10 @@ import 'package:dorak_app/core/theming/styles.dart';
 import 'package:dorak_app/core/widgets/app_text_form_field.dart';
 import 'package:dorak_app/features/group_details/data/group_details_args.dart';
 import 'package:dorak_app/features/home/data/model/group_model.dart';
+import 'package:dorak_app/features/home/logic/groups_cubit.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 class CustomBottomSheet extends StatefulWidget {
@@ -13,8 +18,6 @@ class CustomBottomSheet extends StatefulWidget {
   final TextEditingController membersController;
   final TextEditingController dailyAmountController;
   final TextEditingController cycleDaysController;
-  final bool isLoading;
-  final Function(GroupModel) onGroupAdded;
 
   const CustomBottomSheet({
     super.key,
@@ -22,8 +25,6 @@ class CustomBottomSheet extends StatefulWidget {
     required this.membersController,
     required this.dailyAmountController,
     required this.cycleDaysController,
-    required this.isLoading,
-    required this.onGroupAdded,
   });
 
   @override
@@ -36,66 +37,90 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
 
   @override
   void dispose() {
-    widget.nameController.clear();
-    widget.membersController.clear();
-    widget.dailyAmountController.clear();
-    widget.cycleDaysController.clear();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: SingleChildScrollView(
-        child: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                "إضافة تفاصيل",
-                style: Styles.font17W700,
-                textAlign: TextAlign.center,
-              ),
-              16.0.h,
-              _buildTextFormField(
-                controller: widget.nameController,
-                hintText: "اسم المجموعة",
-                keyboardType: TextInputType.name,
-              ),
-              const SizedBox(height: 10),
-              _buildTextFormField(
-                controller: widget.membersController,
-                hintText: "عدد الأشخاص",
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 10),
-              _buildTextFormField(
-                controller: widget.dailyAmountController,
-                hintText: "المبلغ اليومي",
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 10),
-              _buildTextFormField(
-                controller: widget.cycleDaysController,
-                hintText: "فترة كل دورة (بالأيام)",
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 10),
-              _buildDatePicker(context),
-              const SizedBox(height: 16),
-              _buildSubmitButton(context),
-              const SizedBox(height: 16),
-            ],
+    return BlocConsumer<GroupsCubit, GroupsState>(
+      listener: (context, state) {
+        if (state is AddGroupSuccess) {
+          // Clear the fields and set state after adding group
+          widget.nameController.clear();
+          widget.membersController.clear();
+          widget.dailyAmountController.clear();
+          widget.cycleDaysController.clear();
+          setState(() => startDate = null);
+
+          Navigator.pop(context);
+          Navigator.pushNamed(
+            context,
+            Routes.groupDetails,
+            arguments: GroupDetailsArgs(
+              userId: FirebaseAuth.instance.currentUser!.uid,
+              group: state.group,
+              paymentDates: state.group.calculatePaymentDates(),
+            ),
+          );
+        } else if (state is AddGroupFailure) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("فشل في إضافة المجموعة: ${state.message}")),
+          );
+          log("Error: ${state.message}");
+        }
+      },
+      builder: (context, state) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
           ),
-        ),
-      ),
+          child: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text("إضافة تفاصيل", style: Styles.font17W700),
+                  16.0.h,
+                  _buildTextFormField(
+                    controller: widget.nameController,
+                    hintText: "اسم المجموعة",
+                    keyboardType: TextInputType.name,
+                  ),
+                  const SizedBox(height: 10),
+                  _buildTextFormField(
+                    controller: widget.membersController,
+                    hintText: "عدد الأشخاص",
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 10),
+                  _buildTextFormField(
+                    controller: widget.dailyAmountController,
+                    hintText: "المبلغ اليومي",
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 10),
+                  _buildTextFormField(
+                    controller: widget.cycleDaysController,
+                    hintText: "فترة كل دورة (بالأيام)",
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 10),
+                  _buildDatePicker(context),
+                  const SizedBox(height: 16),
+                  _buildSubmitButton(context, state),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
+  // بناء حقل النصوص (TextFormField)
   Widget _buildTextFormField({
     required TextEditingController controller,
     required String hintText,
@@ -109,6 +134,7 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
     );
   }
 
+  // بناء Date Picker لاختيار تاريخ البداية
   Widget _buildDatePicker(BuildContext context) {
     return Column(
       children: [
@@ -137,22 +163,25 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
     );
   }
 
-  Widget _buildSubmitButton(BuildContext context) {
+  // بناء زر الإرسال
+  Widget _buildSubmitButton(BuildContext context, GroupsState state) {
+    final isLoading = state is GroupLoading && state.action == "إضافة مجموعة";
     return SizedBox(
       width: double.infinity,
-      child:
-          widget.isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: ElevatedButton(
-                  onPressed: () => _validateAndSubmit(context),
-                  child: const Text("إضافة"),
-                ),
-              ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+        child: ElevatedButton(
+          onPressed: () => _validateAndSubmit(context),
+          child:
+              isLoading
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text("إضافة"),
+        ),
+      ),
     );
   }
 
+  // تحديد تاريخ البداية باستخدام الـ DatePicker
   Future<void> _selectStartDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -168,7 +197,6 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
               surface: Colors.white,
               onSurface: Colors.black,
             ),
-            dialogTheme: const DialogTheme(backgroundColor: Colors.white),
           ),
           child: child!,
         );
@@ -180,16 +208,21 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
     }
   }
 
+  // التحقق من البيانات المدخلة وإرسالها
   void _validateAndSubmit(BuildContext context) {
     if (!_validateForm()) return;
 
     final group = _createGroupModel();
-    widget.onGroupAdded(group);
 
-    _navigateToGroupDetails(context, group);
-    _clearForm();
+    context.read<GroupsCubit>().addGroup(
+      group,
+      FirebaseAuth.instance.currentUser!.uid,
+    );
+    log("User UID: ${FirebaseAuth.instance.currentUser!.uid}");
+    log("Group data: ${group.toMap()}");
   }
 
+  // التحقق من صحة البيانات المدخلة
   bool _validateForm() {
     if (formKey.currentState?.validate() != true) {
       ScaffoldMessenger.of(
@@ -208,6 +241,7 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
     return true;
   }
 
+  // إنشاء موديل المجموعة
   GroupModel _createGroupModel() {
     final membersCount = int.tryParse(widget.membersController.text) ?? 0;
     final cycleDays = int.tryParse(widget.cycleDaysController.text) ?? 0;
@@ -222,23 +256,5 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
       startDate: startDate!,
       endDate: startDate!.add(Duration(days: cycleDays * membersCount)),
     );
-  }
-
-  void _navigateToGroupDetails(BuildContext context, GroupModel group) {
-    final paymentDates = (group.calculatePaymentDates());
-
-    Navigator.pushNamed(
-      context,
-      Routes.groupDetails,
-      arguments: GroupDetailsArgs(group: group, paymentDates: paymentDates),
-    );
-  }
-
-  void _clearForm() {
-    widget.nameController.clear();
-    widget.membersController.clear();
-    widget.dailyAmountController.clear();
-    widget.cycleDaysController.clear();
-    setState(() => startDate = null);
   }
 }

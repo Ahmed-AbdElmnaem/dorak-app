@@ -1,7 +1,8 @@
 import 'package:dorak_app/core/routing/app_router.dart';
 import 'package:dorak_app/core/routing/routes.dart';
 import 'package:dorak_app/core/theming/color_manager.dart';
-import 'package:dorak_app/features/home/logic/group_cubit.dart';
+import 'package:dorak_app/features/auth/data/cubit/auth_cubit/auth_cubit.dart';
+import 'package:dorak_app/features/home/logic/groups_cubit.dart';
 import 'package:dorak_app/firebase_options.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -21,8 +22,11 @@ void main() async {
       saveLocale: true,
       startLocale: const Locale('ar'),
       path: 'assets/translations',
-      child: BlocProvider(
-        create: (context) => GroupCubit(),
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (context) => GroupsCubit()),
+          BlocProvider(create: (context) => AuthCubit()),
+        ],
         child: const MyApp(),
       ),
     ),

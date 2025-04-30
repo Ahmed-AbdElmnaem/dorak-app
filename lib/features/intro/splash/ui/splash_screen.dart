@@ -33,7 +33,7 @@ class _SplashScreenState extends State<SplashScreen> {
     Future.delayed(const Duration(seconds: 3), () {
       if (context.mounted) {
         context.pushNamedAndRemoveUntil(
-          Routes.home,
+          Routes.login,
           predicate: (route) => false,
         );
       }

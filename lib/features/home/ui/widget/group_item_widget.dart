@@ -1,5 +1,3 @@
-// lib/features/home/ui/widgets/group_item_widget.dart
-
 import 'package:animate_do/animate_do.dart';
 import 'package:dorak_app/core/theming/color_manager.dart';
 import 'package:dorak_app/core/theming/styles.dart';
@@ -33,7 +31,7 @@ class GroupItemWidget extends StatelessWidget {
             borderRadius: BorderRadius.circular(12.0),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withValues(alpha: 0.3),
+                color: Colors.grey.withOpacity(0.3),
                 spreadRadius: 2,
                 blurRadius: 5,
                 offset: const Offset(0, 3),
@@ -57,7 +55,7 @@ class GroupItemWidget extends StatelessWidget {
               SizedBox(height: 6.0),
               buildInfoRow(
                 Icons.account_balance_wallet,
-                'المبلغ الإجمالي: ${group.totalAmount}ج',
+                'المبلغ الإجمالي: ${group.dailyAmount * group.cycleDays}ج',
               ),
               SizedBox(height: 10.0),
               Row(

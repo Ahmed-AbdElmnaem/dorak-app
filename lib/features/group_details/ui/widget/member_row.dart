@@ -5,30 +5,28 @@ class MemberRow {
     required int index,
     required TextEditingController nameController,
     required List<bool> payments,
-    required Function(int paymentIndex, bool value) onPaymentChanged,
+    required void Function(int paymentIndex, bool value) onPaymentChanged,
   }) {
     return DataRow(
       cells: [
-        DataCell(Text('${index + 1}')),
+        DataCell(Text((index + 1).toString())),
         DataCell(
           TextField(
             controller: nameController,
-            decoration: const InputDecoration(
-              hintText: 'أدخل الاسم',
-              border: InputBorder.none,
+            decoration: const InputDecoration(border: InputBorder.none),
+          ),
+        ),
+        ...List.generate(
+          payments.length,
+          (paymentIndex) => DataCell(
+            Checkbox(
+              value: payments[paymentIndex] == true, // ✅ تأكيد عدم وجود null
+              onChanged: (value) {
+                onPaymentChanged(paymentIndex, value ?? false);
+              },
             ),
           ),
         ),
-        ...List.generate(payments.length, (paymentIndex) {
-          return DataCell(
-            Checkbox(
-              value: payments[paymentIndex],
-              onChanged: (value) {
-                onPaymentChanged(paymentIndex, value!);
-              },
-            ),
-          );
-        }),
       ],
     );
   }
