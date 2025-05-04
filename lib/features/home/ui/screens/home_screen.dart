@@ -7,7 +7,8 @@ import 'package:dorak_app/features/home/ui/widget/custom_bottom_sheet.dart';
 import 'package:dorak_app/features/home/ui/widget/group_item_widget.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart'; // مهم جدا
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:local_auth/local_auth.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,6 +18,42 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final LocalAuthentication _localAuth = LocalAuthentication();
+
+  Future<void> _confirmDeleteGroup(
+    BuildContext context,
+    GroupModel group,
+  ) async {
+    bool isAuthenticated = await _localAuth.authenticate(
+      localizedReason: 'من فضلك قم بتأكيد هويتك لحذف هذه الجمعية',
+      options: AuthenticationOptions(stickyAuth: true),
+    );
+
+    if (isAuthenticated) {
+      _deleteGroup(group, context);
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('فشل في التحقق. لم يتم الحذف.')));
+    }
+  }
+
+  Future<void> _deleteGroup(GroupModel group, BuildContext context) async {
+    try {
+      final uid = FirebaseAuth.instance.currentUser!.uid;
+
+      context.read<GroupsCubit>().deleteGroup(uid, group.id.toString());
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('تم حذف الجمعية بنجاح')));
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('حدث خطأ أثناء حذف الجمعية: $e')));
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -33,8 +70,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController dailyAmountController = TextEditingController();
   final TextEditingController cycleDaysController = TextEditingController();
 
-  // Function to show the custom bottom sheet
-  // Function to show the custom bottom sheet// Function to show the custom bottom sheet
   void showCustomBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -42,7 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
       showDragHandle: true,
       builder: (bottomSheetContext) {
         return BlocProvider.value(
-          value: context.read<GroupsCubit>(), // تأكد من استخدام read() هنا
+          value: context.read<GroupsCubit>(),
           child: CustomBottomSheet(
             nameController: nameController,
             membersController: membersController,
@@ -56,8 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Function to handle navigation to GroupDetailsScreen
   void navigateToGroupDetails(GroupModel group) {
-    List<DateTime> paymentDates =
-        []; // تأكد من ملئ هذا المتغير بالبيانات الصحيحة.
+    List<DateTime> paymentDates = [];
     Navigator.pushNamed(
       context,
       Routes.groupDetails,
@@ -65,9 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
         //
         userId: FirebaseAuth.instance.currentUser!.uid,
         group: group, // تم تمرير الـ group بشكل صحيح
-        paymentDates:
-            group
-                .calculatePaymentDates(), // ← أهم خطوة!, // تأكد من إضافة التواريخ هنا
+        paymentDates: group.calculatePaymentDates(),
       ),
     );
   }
@@ -112,6 +144,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           index: index,
                           onTap:
                               () => navigateToGroupDetails(state.groups[index]),
+                          onDelete:
+                              () => _confirmDeleteGroup(
+                                context,
+                                state.groups[index],
+                              ), // ت
                         ),
                   );
                 } else if (state is GroupDataError) {

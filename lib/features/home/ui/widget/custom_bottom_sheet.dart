@@ -45,7 +45,6 @@ class _CustomBottomSheetState extends State<CustomBottomSheet> {
     return BlocConsumer<GroupsCubit, GroupsState>(
       listener: (context, state) {
         if (state is AddGroupSuccess) {
-          // Clear the fields and set state after adding group
           widget.nameController.clear();
           widget.membersController.clear();
           widget.dailyAmountController.clear();

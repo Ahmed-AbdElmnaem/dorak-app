@@ -1,10 +1,9 @@
-import 'package:dorak_app/features/home/data/model/group_model.dart';
-import 'package:equatable/equatable.dart';
+// features/group_details/logic/cubit/group_details_state.dart
+import 'package:dorak_app/features/group_details/data/model/member_model.dart';
+import 'package:flutter/material.dart';
 
-abstract class GroupDetailsState extends Equatable {
-  @override
-  List<Object?> get props => [];
-}
+@immutable
+abstract class GroupDetailsState {}
 
 class GroupDetailsInitial extends GroupDetailsState {}
 
@@ -16,24 +15,31 @@ class GroupDetailsLoaded extends GroupDetailsState {
 
   GroupDetailsLoaded({required this.members, required this.payments});
 
-  @override
-  List<Object?> get props => [members, payments];
+  GroupDetailsLoaded copyWith({
+    List<MemberModel>? members,
+    List<List<bool>>? payments,
+  }) {
+    return GroupDetailsLoaded(
+      members: members ?? this.members,
+      payments: payments ?? this.payments,
+    );
+  }
 }
 
 class GroupDetailsUpdated extends GroupDetailsState {
   final String message;
 
   GroupDetailsUpdated({required this.message});
-
-  @override
-  List<Object?> get props => [message];
 }
 
 class GroupDetailsError extends GroupDetailsState {
   final String message;
 
   GroupDetailsError({required this.message});
+}
 
-  @override
-  List<Object?> get props => [message];
+class GroupNameUpdated extends GroupDetailsState {
+  final String message;
+
+  GroupNameUpdated({required this.message});
 }

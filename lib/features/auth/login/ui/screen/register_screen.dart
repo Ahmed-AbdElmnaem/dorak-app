@@ -2,8 +2,8 @@ import 'package:animate_do/animate_do.dart';
 import 'package:dorak_app/core/routing/routes.dart';
 import 'package:dorak_app/core/theming/color_manager.dart';
 import 'package:dorak_app/core/widgets/app_text_form_field.dart';
-import 'package:dorak_app/features/auth/data/cubit/auth_cubit/auth_cubit.dart';
-import 'package:dorak_app/features/auth/data/cubit/auth_cubit/auth_state.dart';
+import 'package:dorak_app/features/auth/logic/cubit/auth_cubit/auth_cubit.dart';
+import 'package:dorak_app/features/auth/logic/cubit/auth_cubit/auth_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

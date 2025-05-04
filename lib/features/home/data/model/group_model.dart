@@ -1,37 +1,38 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dorak_app/features/group_details/data/model/member_model.dart';
 
 // فئة تمثل العضو
-class MemberModel {
-  final String id;
-  final String name;
-  final Map<String, bool> payments;
+// class MemberModel {
+//   final String id;
+//   final String name;
+//   final Map<String, bool> payments;
 
-  MemberModel({required this.id, required this.name, required this.payments});
+//   MemberModel({required this.id, required this.name, required this.payments});
 
-  Map<String, dynamic> toMap() {
-    return {'id': id, 'name': name, 'payments': payments};
-  }
+//   Map<String, dynamic> toMap() {
+//     return {'id': id, 'name': name, 'payments': payments};
+//   }
 
-  factory MemberModel.fromMap(
-    Map<String, dynamic> map, {
-    required String memberId,
-  }) {
-    return MemberModel(
-      id: memberId,
-      name: map['name'] ?? 'بدون اسم',
-      payments:
-          (map['payments'] as Map<String, dynamic>?)?.map(
-            (key, value) => MapEntry(key, value as bool),
-          ) ??
-          {},
-    );
-  }
+//   factory MemberModel.fromMap(
+//     Map<String, dynamic> map, {
+//     required String memberId,
+//   }) {
+//     return MemberModel(
+//       id: memberId,
+//       name: map['name'] ?? 'بدون اسم',
+//       payments:
+//           (map['payments'] as Map<String, dynamic>?)?.map(
+//             (key, value) => MapEntry(key, value as bool),
+//           ) ??
+//           {},
+//     );
+//   }
 
-  @override
-  String toString() {
-    return 'MemberModel{id: $id, name: $name, payments: $payments}';
-  }
-}
+//   @override
+//   String toString() {
+//     return 'MemberModel{id: $id, name: $name, payments: $payments}';
+//   }
+// }
 
 // تعديل الـ GroupModel ليشمل الأعضاء
 class GroupModel {

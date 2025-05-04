@@ -1,14 +1,18 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dorak_app/features/group_details/data/repo/group_details_repository.dart';
 import 'package:dorak_app/features/group_details/logic/cubit/group_details_cubit.dart';
 import 'package:dorak_app/features/group_details/logic/cubit/group_details_state.dart';
+import 'package:dorak_app/features/group_details/ui/widget/add_member_dialog.dart';
 import 'package:dorak_app/features/group_details/ui/widget/group_info_card.dart';
 import 'package:dorak_app/features/group_details/ui/widget/payments_data_table.dart';
 import 'package:dorak_app/features/group_details/ui/widget/save_button.dart';
 import 'package:dorak_app/features/home/data/model/group_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:local_auth/local_auth.dart';
 
 class GroupDetailsScreen extends StatefulWidget {
-  final String userId; // ✅ إضافة userId
+  final String userId;
   final List<DateTime> paymentDates;
   final GroupModel group;
 
@@ -29,7 +33,9 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    _cubit = GroupDetailsCubit();
+    _cubit = GroupDetailsCubit(
+      GroupDetailsRepository(FirebaseFirestore.instance),
+    );
     _loadMembers();
   }
 
@@ -37,49 +43,47 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
     _cubit.fetchGroupMembers(
       userId: widget.userId,
       groupId: widget.group.id.toString(),
-      paymentDates: widget.group.calculatePaymentDates(), // ← أهم خطوة!,
+      paymentDates: widget.group.calculatePaymentDates(),
     );
   }
 
-  void _showAddMemberDialog() {
-    final TextEditingController nameController = TextEditingController();
+  Future<void> _authenticateAndSave() async {
+    final localAuth = LocalAuthentication();
+    final isAvailable = await localAuth.canCheckBiometrics;
 
-    showDialog(
+    if (!isAvailable) {
+      _showSnackBar('البصمة غير متوفرة');
+      return;
+    }
+
+    final authenticated = await localAuth.authenticate(
+      localizedReason: 'يرجى تأكيد البصمة لحفظ التغييرات',
+    );
+
+    if (authenticated) {
+      await _cubit.saveChanges(
+        userId: widget.userId,
+        groupId: widget.group.id.toString(),
+        paymentDates: widget.paymentDates,
+      );
+    } else {
+      _showSnackBar('فشل التحقق بالبصمة');
+    }
+  }
+
+  void _showSnackBar(String message, {Color? color}) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
+  }
+
+  void _onAddMemberPressed() {
+    showAddMemberDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("إضافة عضو جديد"),
-          content: TextField(
-            controller: nameController,
-            decoration: const InputDecoration(
-              labelText: "اسم العضو",
-              border: OutlineInputBorder(),
-            ),
-          ),
-          actions: [
-            TextButton(
-              child: const Text("إلغاء"),
-              onPressed: () => Navigator.pop(context),
-            ),
-            ElevatedButton(
-              child: const Text("إضافة"),
-              onPressed: () async {
-                final name = nameController.text.trim();
-                if (name.isNotEmpty) {
-                  await _cubit.addMembersToGroup(
-                    userId: widget.userId,
-                    groupId: widget.group.id.toString(),
-                    memberNames: [name],
-                    paymentDates: widget.paymentDates,
-                  );
-                  Navigator.pop(context);
-                  _loadMembers();
-                }
-              },
-            ),
-          ],
-        );
-      },
+      maxMembers: widget.group.membersCount,
+      onAdd: (name) => _cubit.addMemberLocally(name),
+      currentMembersCount:
+          (_cubit.state as GroupDetailsLoaded?)?.members.length ?? 0,
     );
   }
 
@@ -93,33 +97,18 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
           actions: [
             IconButton(
               icon: const Icon(Icons.person_add),
-              tooltip: 'إضافة عضو',
-              onPressed: _showAddMemberDialog,
+              tooltip: 'إضافة عضو  ',
+              onPressed: _onAddMemberPressed,
             ),
           ],
         ),
         body: BlocConsumer<GroupDetailsCubit, GroupDetailsState>(
           listener: (context, state) {
             if (state is GroupDetailsError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            }
-            if (state is GroupDetailsUpdated) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: Colors.green,
-                ),
-              );
-              context.read<GroupDetailsCubit>().fetchGroupMembers(
-                userId: widget.userId,
-                groupId: widget.group.id.toString(),
-                paymentDates: widget.group.calculatePaymentDates(),
-              );
+              _showSnackBar(state.message, color: Colors.red);
+            } else if (state is GroupDetailsUpdated) {
+              _showSnackBar(state.message, color: Colors.green);
+              _loadMembers();
             }
           },
           builder: (context, state) {
@@ -136,6 +125,10 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                     GroupInfoCard(group: widget.group),
                     const SizedBox(height: 16),
                     PaymentsDataTable(
+                      repository: GroupDetailsRepository(
+                        FirebaseFirestore.instance,
+                      ),
+
                       group: widget.group,
                       members: state.members,
                       paymentDates: widget.paymentDates,
@@ -146,11 +139,9 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                               .toList(),
                       onPaymentChanged: (memberIndex, paymentIndex, value) {
                         final member = state.members[memberIndex];
-                        _cubit.updatePaymentStatus(
-                          userId: widget.userId,
-                          groupId: widget.group.id.toString(),
+                        _cubit.updatePaymentLocally(
                           memberId: member.id,
-                          paymentIndex:
+                          paymentKey:
                               widget.paymentDates[paymentIndex]
                                   .toIso8601String(),
                           value: value,
@@ -158,11 +149,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                       },
                     ),
                     const SizedBox(height: 16),
-                    SaveButton(
-                      onPressed: () {
-                        // إجراء معين عند الضغط
-                      },
-                    ),
+                    SaveButton(onPressed: _authenticateAndSave),
                   ],
                 ),
               );
