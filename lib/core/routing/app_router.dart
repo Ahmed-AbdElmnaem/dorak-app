@@ -1,7 +1,7 @@
 import 'package:dorak_app/core/routing/routes.dart';
 import 'package:dorak_app/features/about/UI/about_screen.dart';
-import 'package:dorak_app/features/auth/login/ui/screen/login_screen.dart';
-import 'package:dorak_app/features/auth/login/ui/screen/register_screen.dart';
+import 'package:dorak_app/features/auth/ui/screen/login_screen.dart';
+import 'package:dorak_app/features/auth/ui/screen/register_screen.dart';
 import 'package:dorak_app/features/group_details/data/group_details_args.dart';
 import 'package:dorak_app/features/group_details/ui/screens/group_details_screen.dart';
 import 'package:dorak_app/features/home/ui/screens/home_screen.dart';

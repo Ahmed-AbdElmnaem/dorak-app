@@ -2,6 +2,7 @@ import 'package:dorak_app/core/routing/routes.dart';
 import 'package:dorak_app/core/theming/color_manager.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CustomAppDrawer extends StatelessWidget {
   const CustomAppDrawer({super.key});
@@ -71,6 +72,8 @@ class CustomAppDrawer extends StatelessWidget {
               TextButton(
                 child: const Text('تسجيل الخروج'),
                 onPressed: () async {
+                  final prefs = await SharedPreferences.getInstance();
+                  prefs.remove('userId');
                   Navigator.pop(context); // يغلق الـ AlertDialog
                   await FirebaseAuth.instance.signOut();
                   Navigator.pushNamedAndRemoveUntil(
