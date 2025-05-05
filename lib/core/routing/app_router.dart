@@ -1,4 +1,5 @@
 import 'package:dorak_app/core/routing/routes.dart';
+import 'package:dorak_app/features/about/UI/about_screen.dart';
 import 'package:dorak_app/features/auth/login/ui/screen/login_screen.dart';
 import 'package:dorak_app/features/auth/login/ui/screen/register_screen.dart';
 import 'package:dorak_app/features/group_details/data/group_details_args.dart';
@@ -22,6 +23,8 @@ class AppRouter {
 
       case Routes.home:
         return MaterialPageRoute(builder: (_) => const HomeScreen());
+      case Routes.about:
+        return MaterialPageRoute(builder: (_) => const AboutScreen());
 
       case Routes.groupDetails:
         if (args is GroupDetailsArgs) {

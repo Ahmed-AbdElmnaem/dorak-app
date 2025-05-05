@@ -1,5 +1,6 @@
 import 'package:dorak_app/core/routing/routes.dart';
 import 'package:dorak_app/core/theming/color_manager.dart';
+import 'package:dorak_app/core/widgets/custom_drawer.dart';
 import 'package:dorak_app/features/group_details/data/group_details_args.dart';
 import 'package:dorak_app/features/home/data/model/group_model.dart';
 import 'package:dorak_app/features/home/logic/groups_cubit.dart';
@@ -107,6 +108,12 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('قائمة المجموعات'),
+        centerTitle: true,
+        backgroundColor: ColorManager.mainColor,
+        elevation: 0,
+      ),
       resizeToAvoidBottomInset: false,
       floatingActionButton: FloatingActionButton(
         tooltip: 'Add new group',
@@ -114,6 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: const Icon(Icons.add_circle, color: ColorManager.black),
         onPressed: () => showCustomBottomSheet(context),
       ),
+      drawer: CustomAppDrawer(),
       body: Column(
         children: [
           Padding(

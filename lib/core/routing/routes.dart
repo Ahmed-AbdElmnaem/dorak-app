@@ -5,4 +5,5 @@ abstract class Routes {
   static const groupDetails = '/groupDetails';
   static const login = '/login';
   static const register = '/register';
+  static const String about = '/about';
 }
