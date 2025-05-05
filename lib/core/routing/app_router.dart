@@ -1,4 +1,7 @@
 import 'package:dorak_app/core/routing/routes.dart';
+import 'package:dorak_app/features/about/UI/about_screen.dart';
+import 'package:dorak_app/features/auth/ui/screen/login_screen.dart';
+import 'package:dorak_app/features/auth/ui/screen/register_screen.dart';
 import 'package:dorak_app/features/group_details/data/group_details_args.dart';
 import 'package:dorak_app/features/group_details/ui/screens/group_details_screen.dart';
 import 'package:dorak_app/features/home/ui/screens/home_screen.dart';
@@ -13,14 +16,22 @@ class AppRouter {
       case Routes.splash:
         return MaterialPageRoute(builder: (_) => const SplashScreen());
 
+      case Routes.login:
+        return MaterialPageRoute(builder: (_) => LoginScreen());
+      case Routes.register:
+        return MaterialPageRoute(builder: (_) => RegisterScreen());
+
       case Routes.home:
         return MaterialPageRoute(builder: (_) => const HomeScreen());
+      case Routes.about:
+        return MaterialPageRoute(builder: (_) => const AboutScreen());
 
       case Routes.groupDetails:
         if (args is GroupDetailsArgs) {
           return MaterialPageRoute(
             builder:
                 (_) => GroupDetailsScreen(
+                  userId: args.userId,
                   group: args.group,
                   paymentDates: args.paymentDates,
                 ),

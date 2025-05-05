@@ -1,3 +1,4 @@
+import 'package:dorak_app/core/widgets/app_text_form_field.dart';
 import 'package:flutter/material.dart';
 
 class MemberRow {
@@ -5,30 +6,39 @@ class MemberRow {
     required int index,
     required TextEditingController nameController,
     required List<bool> payments,
-    required Function(int paymentIndex, bool value) onPaymentChanged,
+    required void Function(int paymentIndex, bool value) onPaymentChanged,
+    required void Function(String newName)
+    onNameChanged, // إضافة الـ callback هنا
   }) {
     return DataRow(
       cells: [
-        DataCell(Text('${index + 1}')),
+        DataCell(Text((index + 1).toString())),
         DataCell(
-          TextField(
+          AppTextFormField(
             controller: nameController,
-            decoration: const InputDecoration(
-              hintText: 'أدخل الاسم',
-              border: InputBorder.none,
+            hintText: 'اسم العضو',
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'الاسم مطلوب';
+              }
+              return null;
+            },
+            onChanged: (newName) {
+              onNameChanged(newName); // استدعاء الـ callback عند التغيير
+            },
+          ),
+        ),
+        ...List.generate(
+          payments.length,
+          (paymentIndex) => DataCell(
+            Checkbox(
+              value: payments[paymentIndex] == true, // ✅ تأكيد عدم وجود null
+              onChanged: (value) {
+                onPaymentChanged(paymentIndex, value ?? false);
+              },
             ),
           ),
         ),
-        ...List.generate(payments.length, (paymentIndex) {
-          return DataCell(
-            Checkbox(
-              value: payments[paymentIndex],
-              onChanged: (value) {
-                onPaymentChanged(paymentIndex, value!);
-              },
-            ),
-          );
-        }),
       ],
     );
   }

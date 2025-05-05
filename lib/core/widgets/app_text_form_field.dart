@@ -22,6 +22,7 @@ class AppTextFormField extends StatelessWidget {
   final int? minLines;
   final FocusNode? focusNode;
   final TextInputAction? textInputAction;
+  final Function(String)? onChanged;
 
   const AppTextFormField({
     super.key,
@@ -44,6 +45,7 @@ class AppTextFormField extends StatelessWidget {
     this.minLines,
     this.focusNode,
     this.textInputAction,
+    this.onChanged,
   });
 
   static ValueNotifier<bool> isObsecure = ValueNotifier(true);
@@ -103,6 +105,7 @@ class AppTextFormField extends StatelessWidget {
             validator: (value) {
               return validator(value);
             },
+            onChanged: onChanged,
           ),
     );
   }
